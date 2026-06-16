@@ -449,14 +449,15 @@ async function loadData() {
         typeof rawDate === 'number' ? excelDateToString(rawDate) : (rawDate || '—');
     }
 
-    // Version from Settings A2/B2 if present
-    if (wb.Sheets['Settings']) {
-      const s = wb.Sheets['Settings'];
-      const rows = XLSX.utils.sheet_to_json(s, { header: 1 });
-      const ver = rows[1] && rows[1][1];
-      const verNum = parseFloat(ver); document.getElementById('header-version').textContent = !isNaN(verNum) ? 'v' + verNum.toFixed(2) : 'v3.00';
+    // Version from service worker cache name
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage('getVersion');
     } else {
-      document.getElementById('header-version').textContent = 'v3.00';
+      // Fallback: read from sw.js directly
+      fetch('/lego-xlsx/sw.js').then(r => r.text()).then(txt => {
+        const match = txt.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+        if (match) document.getElementById('header-version').textContent = match[1];
+      });
     }
 
     // Inventory tab
@@ -646,6 +647,21 @@ function switchTab(tab) {
 }
 
 loadData();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/lego-xlsx/sw.js')
+    .then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            window.location.reload();
+          }
+        });
+      });
+    });
+}
 </script>
 </body>
 </html>
