@@ -34,15 +34,7 @@
       display: flex; align-items: center; justify-content: space-between;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    .lego-logo {
-      width: 32px; height: 32px;
-      background: var(--red);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 14px; color: #fff; letter-spacing: 0;
-      flex-shrink: 0;
-    }
+
     .header-titles h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 20px; letter-spacing: 1px; color: var(--text);
@@ -257,7 +249,7 @@
 
 <header>
   <div class="header-left">
-    <div class="lego-logo">L</div>
+    <img src="icons/icon-192.png" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;" alt="LEGO"/>
     <div class="header-titles">
       <h1>Ranoya LEGO Collection</h1>
       <div class="version" id="header-version">Loading…</div>
