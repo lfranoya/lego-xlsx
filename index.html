@@ -416,7 +416,7 @@ let allSets = [];
 // Convert Excel serial date to readable string
 function excelDateToString(serial) {
   if (!serial || isNaN(serial)) return '—';
-  const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  const date = new Date(Math.round((serial - 25568) * 86400 * 1000));
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -442,9 +442,9 @@ async function loadData() {
       const s = wb.Sheets['Settings'];
       const rows = XLSX.utils.sheet_to_json(s, { header: 1 });
       const ver = rows[1] && rows[1][1];
-      document.getElementById('header-version').textContent = ver ? 'v' + ver : 'v3.0';
+      const verNum = parseFloat(ver); document.getElementById('header-version').textContent = !isNaN(verNum) ? 'v' + verNum.toFixed(2) : 'v3.00';
     } else {
-      document.getElementById('header-version').textContent = 'v3.0';
+      document.getElementById('header-version').textContent = 'v3.00';
     }
 
     // Inventory tab
