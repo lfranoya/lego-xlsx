@@ -136,7 +136,7 @@
       width: 100%; height: 6px; background: var(--border);
       border-radius: 3px; overflow: hidden;
     }
-    .progress-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width 0.5s ease; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.5s ease; }
     .progress-sub {
       display: flex; justify-content: space-between;
       font-size: 10px; color: var(--muted); margin-top: 4px;
@@ -188,11 +188,11 @@
     .overview-wrap tbody tr:last-child { border-bottom: none; background: #1a1a2e; }
     .overview-wrap tbody td { padding: 12px 14px; text-align: center; vertical-align: middle; }
     .overview-wrap tbody td:first-child { text-align: left; font-weight: 600; color: var(--text); }
-    .overview-wrap tbody tr:last-child td { color: var(--yellow); font-weight: 700; }
+    .overview-wrap tbody tr:last-child td { color: var(--green); font-weight: 700; }
     .ov-sets { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
     .ov-bricks { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .overview-wrap tbody tr:last-child .ov-sets { color: var(--yellow); }
-    .overview-wrap tbody tr:last-child .ov-bricks { color: var(--yellow); opacity: 0.8; }
+    .overview-wrap tbody tr:last-child .ov-sets { color: var(--green); }
+    .overview-wrap tbody tr:last-child .ov-bricks { color: var(--green); opacity: 0.8; }
 
     /* SEARCH */
     .search-bar {
@@ -219,28 +219,38 @@
 
     .set-card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px; margin-bottom: 8px;
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
       border-left: 3px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
     }
     .set-card.built { border-left-color: var(--green); }
     .set-card.retired { border-left-color: var(--red); }
-    .set-card .set-top { display: flex; justify-content: space-between; align-items: flex-start; }
-    .set-card .set-name { font-weight: 600; font-size: 14px; line-height: 1.3; flex: 1; }
-    .set-card .set-num {
+    .set-card-left { flex: 1; min-width: 0; }
+    .set-card-right { text-align: right; flex-shrink: 0; }
+    .set-card .set-num-label {
+      font-size: 11px; color: var(--muted); margin-bottom: 2px;
+    }
+    .set-card .set-name {
+      font-weight: 700; font-size: 15px; line-height: 1.3;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .set-card .set-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .set-card-right .set-pieces-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 16px; color: var(--yellow); margin-left: 8px; flex-shrink: 0;
+      font-size: 28px; color: var(--text); line-height: 1;
     }
-    .set-card .set-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .set-card-right .set-pieces-label {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+    }
     .badge {
-      font-size: 10px; padding: 2px 7px; border-radius: 20px;
-      font-weight: 600; letter-spacing: 0.3px;
+      font-size: 10px; padding: 3px 8px; border-radius: 5px;
+      font-weight: 600; letter-spacing: 0.3px; border: 1px solid transparent;
     }
-    .badge-theme { background: #1e1e2e; color: var(--muted); }
-    .badge-built { background: #1a3a1a; color: var(--green); }
-    .badge-unbuilt { background: #1e1e2e; color: var(--muted); }
-    .badge-retired { background: #3a1a1a; color: #ff6666; }
-    .badge-active { background: #1a1a2e; color: #4a9eff; }
-    .set-card .set-pieces { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .badge-theme { background: #1e1e2e; color: var(--text); border-color: var(--border); }
+    .badge-built { background: transparent; color: var(--green); border-color: var(--green); }
+    .badge-unbuilt { background: transparent; color: var(--muted); border-color: var(--border); }
+    .badge-retired { background: transparent; color: #ff6666; border-color: #ff6666; }
+    .badge-active { background: transparent; color: var(--green); border-color: var(--green); }
   </style>
 </head>
 <body>
@@ -328,8 +338,8 @@
             <th>Theme</th>
             <th>Built</th>
             <th>Built 🧱</th>
-            <th>To Build</th>
-            <th>To Build 🧱</th>
+            <th>Unbuilt</th>
+            <th>Unbuilt 🧱</th>
             <th>Total</th>
             <th>Total 🧱</th>
             <th>%Sets</th>
@@ -496,7 +506,7 @@ function renderDashboard() {
   document.getElementById('hero-pct').textContent      = pctBuilt + '% built';
   document.getElementById('hero-bar').style.width      = pctBuilt + '%';
   document.getElementById('hero-built-sub').textContent    = builtSets.length + ' built';
-  document.getElementById('hero-tobuild-sub').textContent  = unbuiltSets.length + ' to build';
+  document.getElementById('hero-tobuild-sub').textContent  = unbuiltSets.length + ' unbuilt';
 
 
   // Theme table
@@ -540,12 +550,12 @@ function renderDashboard() {
   }
   document.getElementById('overview-tbody').innerHTML = `
     <tr>
-      <td>To Build</td>
-      ${ovCell(unbltActive)}${ovCell(unbltRetired)}${ovCell(unbuiltSets)}
-    </tr>
-    <tr>
       <td>Built</td>
       ${ovCell(builtActive)}${ovCell(builtRetired)}${ovCell(builtSets)}
+    </tr>
+    <tr>
+      <td>Unbuilt</td>
+      ${ovCell(unbltActive)}${ovCell(unbltRetired)}${ovCell(unbuiltSets)}
     </tr>
     <tr>
       <td>Total</td>
@@ -607,16 +617,19 @@ function renderSearch() {
 
   document.getElementById('search-results').innerHTML = results.map(s => `
     <div class="set-card ${s.built ? 'built' : ''} ${s.retired ? 'retired' : ''}">
-      <div class="set-top">
+      <div class="set-card-left">
+        <div class="set-num-label">#${s.num} · ${s.yearRel}</div>
         <div class="set-name">${s.name}</div>
-        <div class="set-num">${s.num}</div>
+        <div class="set-meta">
+          <span class="badge badge-theme">${s.theme}</span>
+          <span class="badge ${s.built ? 'badge-built' : 'badge-unbuilt'}">${s.built ? '✓ Built' : '○ Unbuilt'}</span>
+          <span class="badge ${s.retired ? 'badge-retired' : 'badge-active'}">${s.retired ? 'Retired' : 'Not Retired'}</span>
+        </div>
       </div>
-      <div class="set-meta">
-        <span class="badge badge-theme" style="border-left:2px solid ${themeColor(s.theme)}">${s.theme}</span>
-        <span class="badge ${s.built ? 'badge-built' : 'badge-unbuilt'}">${s.built ? '✓ Built' : 'To Build'}</span>
-        <span class="badge ${s.retired ? 'badge-retired' : 'badge-active'}">${s.retired ? 'Retired' : 'Active'}</span>
+      <div class="set-card-right">
+        <div class="set-pieces-num">${fmtN(s.pieces)}</div>
+        <div class="set-pieces-label">pieces</div>
       </div>
-      <div class="set-pieces">${fmtN(s.pieces)} pieces · ${s.yearRel}${s.yearRet ? ' → ' + s.yearRet : ''}</div>
     </div>`).join('');
 }
 
