@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranoya LEGO Collection</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="LEGO"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --red: #e3000b;
+      --yellow: #FFD700;
+      --green: #7ec850;
+      --bg: #0a0a0f;
+      --card: #13131f;
+      --border: #1e1e2e;
+      --text: #f0ede6;
+      --muted: #666;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+    /* HEADER */
+    header {
+      background: var(--card);
+      border-bottom: 3px solid var(--red);
+      padding: 12px 16px 8px;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .lego-logo {
+      width: 32px; height: 32px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px; color: #fff; letter-spacing: 0;
+      flex-shrink: 0;
+    }
+    .header-titles h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 1px; color: var(--text);
+      line-height: 1;
+    }
+    .header-titles .version {
+      font-size: 11px; color: var(--muted); margin-top: 1px;
+    }
+    .header-status {
+      font-size: 11px; color: var(--muted); text-align: right;
+    }
+    .header-status .updated { color: var(--yellow); font-weight: 600; }
+
+    /* NAV */
+    nav {
+      display: flex;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 59px; z-index: 99;
+    }
+    nav button {
+      flex: 1; padding: 10px; background: none; border: none;
+      color: var(--muted); font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    nav button.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+
+    /* LOADING */
+    #loading {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 60vh; gap: 16px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--muted); font-size: 14px; }
+
+    /* ERROR */
+    #error-msg {
+      display: none; padding: 32px 16px; text-align: center; color: var(--red);
+    }
+
+    /* MAIN CONTENT */
+    #app { display: none; }
+
+    .tab-panel { display: none; padding: 12px 12px 80px; }
+    .tab-panel.active { display: block; }
+
+    /* KPI STRIP */
+    .kpi-strip {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 8px; margin-bottom: 12px;
+    }
+    .kpi-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px;
+    }
+    .kpi-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-card .value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px; color: var(--yellow); line-height: 1.1;
+    }
+    .kpi-card .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px; letter-spacing: 1px;
+      color: var(--muted); margin: 16px 0 8px;
+      text-transform: uppercase;
+    }
+
+    /* TABLES */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--card); }
+    thead th {
+      background: #1a1a2e; color: var(--muted);
+      padding: 8px 10px; text-align: right;
+      font-weight: 600; font-size: 10px; text-transform: uppercase;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 8px 10px; text-align: right; vertical-align: middle; }
+    tbody td:first-child { text-align: left; }
+    .theme-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 6px; flex-shrink: 0;
+    }
+    .theme-cell { display: flex; align-items: center; }
+    .pct-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .pct-bar-bg { width: 40px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .pct-bar-fill { height: 100%; background: var(--yellow); border-radius: 2px; }
+
+    /* MATRIX */
+    .matrix-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 4px;
+    }
+    .matrix-cell {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 12px;
+    }
+    .matrix-cell .m-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .matrix-cell .m-sets {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px; color: var(--text); line-height: 1;
+      margin: 4px 0 2px;
+    }
+    .matrix-cell .m-bricks { font-size: 11px; color: var(--muted); }
+    .matrix-cell.built { border-top: 2px solid var(--green); }
+    .matrix-cell.retired { border-top: 2px solid var(--red); }
+    .matrix-cell.built-active { border-top: 2px solid var(--green); }
+    .matrix-cell.built-retired { border-top: 2px solid #a0c878; }
+    .matrix-cell.unbuild-active { border-top: 2px solid #4a9eff; }
+    .matrix-cell.unbuild-retired { border-top: 2px solid var(--muted); }
+
+    /* SEARCH */
+    .search-bar {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    .search-bar input {
+      flex: 1; background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+    }
+    .search-bar input:focus { outline: none; border-color: var(--yellow); }
+    .filter-row {
+      display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .filter-row select {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 8px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 12px;
+      flex: 1; min-width: 0;
+    }
+    .filter-row select:focus { outline: none; border-color: var(--yellow); }
+
+    .set-count { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+    .set-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; margin-bottom: 8px;
+      border-left: 3px solid var(--border);
+    }
+    .set-card.built { border-left-color: var(--green); }
+    .set-card.retired { border-left-color: var(--red); }
+    .set-card .set-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .set-card .set-name { font-weight: 600; font-size: 14px; line-height: 1.3; flex: 1; }
+    .set-card .set-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px; color: var(--yellow); margin-left: 8px; flex-shrink: 0;
+    }
+    .set-card .set-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 20px;
+      font-weight: 600; letter-spacing: 0.3px;
+    }
+    .badge-theme { background: #1e1e2e; color: var(--muted); }
+    .badge-built { background: #1a3a1a; color: var(--green); }
+    .badge-unbuilt { background: #1e1e2e; color: var(--muted); }
+    .badge-retired { background: #3a1a1a; color: #ff6666; }
+    .badge-active { background: #1a1a2e; color: #4a9eff; }
+    .set-card .set-pieces { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="lego-logo">L</div>
+    <div class="header-titles">
+      <h1>Ranoya LEGO Collection</h1>
+      <div class="version" id="header-version">Loading…</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="updated" id="header-updated">—</div>
+    <div>last updated</div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+  <button onclick="switchTab('search')">Search</button>
+</nav>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Loading collection…</p>
+</div>
+
+<div id="error-msg">
+  <p>⚠️ Could not load collection data.</p>
+  <p style="font-size:12px;margin-top:8px;color:var(--muted)">Check your connection and reload.</p>
+</div>
+
+<div id="app">
+  <!-- DASHBOARD -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="kpi-strip" id="kpi-strip"></div>
+
+    <div class="section-title">Build Progress by Theme</div>
+    <div class="table-wrap">
+      <table id="theme-table">
+        <thead>
+          <tr>
+            <th>Theme</th>
+            <th>Built</th>
+            <th>Built 🧱</th>
+            <th>To Build</th>
+            <th>To Build 🧱</th>
+            <th>Total</th>
+            <th>Total 🧱</th>
+            <th>%Sets</th>
+            <th>%Bricks</th>
+            <th>Active</th>
+            <th>Active 🧱</th>
+            <th>Retired</th>
+            <th>Retired 🧱</th>
+          </tr>
+        </thead>
+        <tbody id="theme-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Collection Overview</div>
+    <div class="matrix-grid" id="matrix-grid"></div>
+
+    <div class="section-title">Retirement Timeline</div>
+    <div class="table-wrap">
+      <table id="retire-table">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Sets</th>
+            <th>Bricks</th>
+          </tr>
+        </thead>
+        <tbody id="retire-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="tab-panel" id="tab-search">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Set number or name…" oninput="renderSearch()"/>
+    </div>
+    <div class="filter-row">
+      <select id="filter-theme" onchange="renderSearch()"><option value="">All Themes</option></select>
+      <select id="filter-built" onchange="renderSearch()">
+        <option value="">Built & Unbuilt</option>
+        <option value="YES">Built</option>
+        <option value="NO">Unbuilt</option>
+      </select>
+      <select id="filter-retired" onchange="renderSearch()">
+        <option value="">Active & Retired</option>
+        <option value="Not Retired">Active</option>
+        <option value="Retired">Retired</option>
+      </select>
+    </div>
+    <div class="set-count" id="set-count"></div>
+    <div id="search-results"></div>
+  </div>
+</div>
+
+<script>
+const XLSX_URL = 'https://raw.githubusercontent.com/lfranoya/lego-xlsx/main/data/LEGO_Dash.xlsx';
+
+const THEME_COLORS = {
+  "Star Wars": "#FFE81F",
+  "Architecture": "#A8D5E2",
+  "Icons": "#F4A460",
+  "Ideas": "#98D8C8",
+  "Super Mario": "#E8402A",
+  "Speed Champions": "#E63946",
+  "Marvel": "#FF3A3A",
+  "Technic": "#CC0000",
+  "Botanical Collection": "#7EC850",
+  "Creator": "#4ECDC4",
+  "Creator Expert": "#2E86AB",
+  "Jurassic World": "#5C8A3C",
+  "Pokemon": "#FFCB05",
+  "Disney": "#1B6CA8",
+  "Harry Potter": "#C7A84F",
+  "DC": "#0476D0",
+  "Editions": "#9B5DE5",
+  "Other": "#888888"
+};
+
+function themeColor(t) { return THEME_COLORS[t] || '#888888'; }
+function fmtN(n) { return n.toLocaleString(); }
+
+let allSets = [];
+
+// Convert Excel serial date to readable string
+function excelDateToString(serial) {
+  if (!serial || isNaN(serial)) return '—';
+  const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+async function loadData() {
+  try {
+    const resp = await fetch(XLSX_URL + '?t=' + Date.now());
+    if (!resp.ok) throw new Error('fetch failed');
+    const buf = await resp.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+
+    // Settings tab
+    if (wb.Sheets['Settings']) {
+      const s = wb.Sheets['Settings'];
+      const settingsRows = XLSX.utils.sheet_to_json(s, { header: 1 });
+      // B1 = settingsRows[0][1]
+      const rawDate = settingsRows[0] && settingsRows[0][1];
+      document.getElementById('header-updated').textContent =
+        typeof rawDate === 'number' ? excelDateToString(rawDate) : (rawDate || '—');
+    }
+
+    // Version from Settings A2/B2 if present
+    if (wb.Sheets['Settings']) {
+      const s = wb.Sheets['Settings'];
+      const rows = XLSX.utils.sheet_to_json(s, { header: 1 });
+      const ver = rows[1] && rows[1][1];
+      document.getElementById('header-version').textContent = ver ? 'v' + ver : 'v3.0';
+    } else {
+      document.getElementById('header-version').textContent = 'v3.0';
+    }
+
+    // Inventory tab
+    const ws = wb.Sheets['Inventory'];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+    allSets = rows.slice(1)
+      .filter(r => r[1] && r[2]) // must have set number and name
+      .map(r => ({
+        num:     String(r[1]),
+        name:    String(r[2]),
+        theme:   String(r[3] || 'Other'),
+        pieces:  Number(r[4]) || 0,
+        yearRel: Number(r[5]) || 0,
+        yearRet: r[6] === '-' || !r[6] ? null : Number(r[6]),
+        built:   String(r[7]).toUpperCase() === 'YES',
+        retired: String(r[8]) === 'Retired'
+      }));
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    renderDashboard();
+    populateThemeFilter();
+    renderSearch();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'block';
+  }
+}
+
+function renderDashboard() {
+  const sets = allSets;
+  const total = sets.length;
+  const totalBricks = sets.reduce((a,s) => a + s.pieces, 0);
+  const builtSets = sets.filter(s => s.built);
+  const unbuiltSets = sets.filter(s => !s.built);
+  const retiredSets = sets.filter(s => s.retired);
+  const activeSets = sets.filter(s => !s.retired);
+
+  // KPI strip
+  const kpis = [
+    { label: 'Total Sets', value: total, sub: fmtN(totalBricks) + ' bricks' },
+    { label: 'Built', value: builtSets.length, sub: fmtN(builtSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
+    { label: 'To Build', value: unbuiltSets.length, sub: fmtN(unbuiltSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
+    { label: 'Retired', value: retiredSets.length, sub: fmtN(retiredSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
+  ];
+  document.getElementById('kpi-strip').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub">${k.sub}</div>
+    </div>`).join('');
+
+  // Theme table
+  const themes = [...new Set(sets.map(s => s.theme))].sort();
+  const tbody = document.getElementById('theme-tbody');
+  tbody.innerHTML = themes.map(theme => {
+    const ts = sets.filter(s => s.theme === theme);
+    const built = ts.filter(s => s.built);
+    const unblt = ts.filter(s => !s.built);
+    const act   = ts.filter(s => !s.retired);
+    const ret   = ts.filter(s => s.retired);
+    const bk = r => r.reduce((a,s)=>a+s.pieces,0);
+    const pctS = ts.length ? Math.round(built.length/ts.length*100) : 0;
+    const pctB = bk(ts) ? Math.round(bk(built)/bk(ts)*100) : 0;
+    return `<tr>
+      <td><span class="theme-cell"><span class="theme-dot" style="background:${themeColor(theme)}"></span>${theme}</span></td>
+      <td>${built.length}</td>
+      <td>${fmtN(bk(built))}</td>
+      <td>${unblt.length}</td>
+      <td>${fmtN(bk(unblt))}</td>
+      <td>${ts.length}</td>
+      <td>${fmtN(bk(ts))}</td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctS}%"></div></div>${pctS}%</div></td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctB}%"></div></div>${pctB}%</div></td>
+      <td>${act.length}</td>
+      <td>${fmtN(bk(act))}</td>
+      <td>${ret.length}</td>
+      <td>${fmtN(bk(ret))}</td>
+    </tr>`;
+  }).join('');
+
+  // Matrix
+  const bk = arr => arr.reduce((a,s)=>a+s.pieces,0);
+  const builtActive   = sets.filter(s => s.built && !s.retired);
+  const builtRetired  = sets.filter(s => s.built && s.retired);
+  const unbltActive   = sets.filter(s => !s.built && !s.retired);
+  const unbltRetired  = sets.filter(s => !s.built && s.retired);
+  const matrix = [
+    { label: 'Built · Active',    sets: builtActive,  cls: 'built-active' },
+    { label: 'Built · Retired',   sets: builtRetired, cls: 'built-retired' },
+    { label: 'To Build · Active', sets: unbltActive,  cls: 'unbuild-active' },
+    { label: 'To Build · Retired',sets: unbltRetired, cls: 'unbuild-retired' },
+  ];
+  document.getElementById('matrix-grid').innerHTML = matrix.map(m => `
+    <div class="matrix-cell ${m.cls}">
+      <div class="m-label">${m.label}</div>
+      <div class="m-sets">${m.sets.length}</div>
+      <div class="m-bricks">${fmtN(bk(m.sets))} bricks</div>
+    </div>`).join('');
+
+  // Retirement timeline
+  const yearMap = {};
+  sets.forEach(s => {
+    if (s.yearRet) {
+      if (!yearMap[s.yearRet]) yearMap[s.yearRet] = { sets: 0, bricks: 0 };
+      yearMap[s.yearRet].sets++;
+      yearMap[s.yearRet].bricks += s.pieces;
+    }
+  });
+  const noRetire = sets.filter(s => !s.yearRet);
+  const rtbody = document.getElementById('retire-tbody');
+  rtbody.innerHTML = Object.keys(yearMap).sort().map(y => `
+    <tr>
+      <td>${y}</td>
+      <td>${yearMap[y].sets}</td>
+      <td>${fmtN(yearMap[y].bricks)}</td>
+    </tr>`).join('') + `
+    <tr>
+      <td style="color:var(--muted)">Active (no year)</td>
+      <td>${noRetire.length}</td>
+      <td>${fmtN(noRetire.reduce((a,s)=>a+s.pieces,0))}</td>
+    </tr>`;
+}
+
+function populateThemeFilter() {
+  const themes = [...new Set(allSets.map(s => s.theme))].sort();
+  const sel = document.getElementById('filter-theme');
+  themes.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+}
+
+function renderSearch() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const theme = document.getElementById('filter-theme').value;
+  const builtF = document.getElementById('filter-built').value;
+  const retF = document.getElementById('filter-retired').value;
+
+  let results = allSets.filter(s => {
+    if (q && !s.name.toLowerCase().includes(q) && !s.num.includes(q)) return false;
+    if (theme && s.theme !== theme) return false;
+    if (builtF === 'YES' && !s.built) return false;
+    if (builtF === 'NO' && s.built) return false;
+    if (retF === 'Retired' && !s.retired) return false;
+    if (retF === 'Not Retired' && s.retired) return false;
+    return true;
+  });
+
+  document.getElementById('set-count').textContent = `${results.length} set${results.length !== 1 ? 's' : ''}`;
+
+  document.getElementById('search-results').innerHTML = results.map(s => `
+    <div class="set-card ${s.built ? 'built' : ''} ${s.retired ? 'retired' : ''}">
+      <div class="set-top">
+        <div class="set-name">${s.name}</div>
+        <div class="set-num">${s.num}</div>
+      </div>
+      <div class="set-meta">
+        <span class="badge badge-theme" style="border-left:2px solid ${themeColor(s.theme)}">${s.theme}</span>
+        <span class="badge ${s.built ? 'badge-built' : 'badge-unbuilt'}">${s.built ? '✓ Built' : 'To Build'}</span>
+        <span class="badge ${s.retired ? 'badge-retired' : 'badge-active'}">${s.retired ? 'Retired' : 'Active'}</span>
+      </div>
+      <div class="set-pieces">${fmtN(s.pieces)} pieces · ${s.yearRel}${s.yearRet ? ' → ' + s.yearRet : ''}</div>
+    </div>`).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+loadData();
+</script>
+</body>
+</html>
