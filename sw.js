@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3.00';
+const CACHE_VERSION = 'v3.01';
 const CACHE_NAME = `lego-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
