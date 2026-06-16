@@ -128,7 +128,7 @@
       width: 100%; height: 6px; background: var(--border);
       border-radius: 3px; overflow: hidden;
     }
-    .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.5s ease; }
+    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
     .progress-sub {
       display: flex; justify-content: space-between;
       font-size: 10px; color: var(--muted); margin-top: 4px;
@@ -148,23 +148,25 @@
     table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--card); }
     thead th {
       background: #1a1a2e; color: var(--muted);
-      padding: 8px 10px; text-align: right;
+      padding: 8px 10px; text-align: center;
       font-weight: 600; font-size: 10px; text-transform: uppercase;
       border-bottom: 1px solid var(--border); white-space: nowrap;
     }
     thead th:first-child { text-align: left; }
+    tbody td { text-align: center !important; }
+    tbody td:first-child { text-align: left !important; }
     tbody tr { border-bottom: 1px solid var(--border); }
     tbody tr:last-child { border-bottom: none; }
-    tbody td { padding: 8px 10px; text-align: right; vertical-align: middle; }
+    tbody td { padding: 8px 10px; text-align: center; vertical-align: middle; }
     tbody td:first-child { text-align: left; }
     .theme-dot {
       display: inline-block; width: 8px; height: 8px;
       border-radius: 50%; margin-right: 6px; flex-shrink: 0;
     }
     .theme-cell { display: flex; align-items: center; }
-    .pct-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .pct-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: center; }
     .pct-bar-bg { width: 40px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-    .pct-bar-fill { height: 100%; background: var(--yellow); border-radius: 2px; }
+    .pct-bar-fill { height: 100%; border-radius: 2px; }
 
     /* MATRIX */
     /* COLLECTION OVERVIEW TABLE */
@@ -422,6 +424,12 @@ function excelDateToString(serial) {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function pctColor(pct) {
+  if (pct < 40) return '#e3000b';
+  if (pct <= 80) return '#FFD700';
+  return '#7ec850';
+}
+
 async function loadData() {
   try {
     const resp = await fetch(XLSX_URL + '?t=' + Date.now());
@@ -499,6 +507,7 @@ function renderDashboard() {
   document.getElementById('hero-bricks').textContent   = fmtN(totalBricks);
   document.getElementById('hero-pct').textContent      = pctBuilt + '% built';
   document.getElementById('hero-bar').style.width      = pctBuilt + '%';
+  document.getElementById('hero-bar').style.background  = pctColor(pctBuilt);
   document.getElementById('hero-built-sub').textContent    = builtSets.length + ' built';
   document.getElementById('hero-tobuild-sub').textContent  = unbuiltSets.length + ' unbuilt';
 
@@ -523,8 +532,8 @@ function renderDashboard() {
       <td style="border-right:1px solid var(--border)">${fmtN(bk(built))}</td>
       <td>${unblt.length}</td>
       <td style="border-right:1px solid var(--border)">${fmtN(bk(unblt))}</td>
-      <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctS}%"></div></div>${pctS}%</div></td>
-      <td style="border-right:1px solid var(--border)"><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctB}%"></div></div>${pctB}%</div></td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctS}%;background:${pctColor(pctS)}"></div></div>${pctS}%</div></td>
+      <td style="border-right:1px solid var(--border)"><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctB}%;background:${pctColor(pctB)}"></div></div>${pctB}%</div></td>
       <td>${act.length}</td>
       <td style="border-right:1px solid var(--border)">${fmtN(bk(act))}</td>
       <td>${ret.length}</td>
