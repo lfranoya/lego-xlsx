@@ -425,9 +425,11 @@ function excelDateToString(serial) {
 }
 
 function pctColor(pct) {
-  if (pct < 40) return '#e3000b';
-  if (pct <= 80) return '#FFD700';
-  return '#7ec850';
+  if (pct === 100) return '#2d7a2d';
+  if (pct > 75)   return '#7ec850';
+  if (pct >= 50)  return '#FFD700';
+  if (pct >= 25)  return '#FF8C00';
+  return '#e3000b';
 }
 
 async function loadData() {
