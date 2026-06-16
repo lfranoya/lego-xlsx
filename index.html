@@ -98,21 +98,50 @@
     .tab-panel { display: none; padding: 12px 12px 80px; }
     .tab-panel.active { display: block; }
 
-    /* KPI STRIP */
-    .kpi-strip {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 8px; margin-bottom: 12px;
-    }
-    .kpi-card {
+    /* HERO KPI BAR */
+    .hero-bar {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px;
+      border-radius: 10px; padding: 14px 14px 12px;
+      margin-bottom: 8px;
     }
-    .kpi-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi-card .value {
+    .hero-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .hero-left .hero-count {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px; color: var(--yellow); line-height: 1.1;
+      font-size: 48px; color: var(--text); line-height: 1;
     }
-    .kpi-card .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .hero-left .hero-label {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;
+    }
+    .hero-right { text-align: right; }
+    .hero-right .hero-count {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px; color: var(--text); line-height: 1;
+    }
+    .hero-right .hero-label {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;
+    }
+    .progress-wrap { margin-bottom: 6px; }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted); margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .progress-label .pct { color: var(--yellow); font-weight: 700; }
+    .progress-track {
+      width: 100%; height: 6px; background: var(--border);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width 0.5s ease; }
+    .progress-sub {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted); margin-top: 4px;
+    }
+
 
     /* SECTION TITLE */
     .section-title {
@@ -146,27 +175,24 @@
     .pct-bar-fill { height: 100%; background: var(--yellow); border-radius: 2px; }
 
     /* MATRIX */
-    .matrix-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px; margin-bottom: 4px;
+    /* COLLECTION OVERVIEW TABLE */
+    .overview-wrap { border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+    .overview-wrap table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 13px; }
+    .overview-wrap thead th {
+      background: #1a1a2e; color: var(--muted); padding: 10px 14px;
+      text-align: center; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.8px; font-weight: 600; border-bottom: 1px solid var(--border);
     }
-    .matrix-cell {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 12px;
-    }
-    .matrix-cell .m-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .matrix-cell .m-sets {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 32px; color: var(--text); line-height: 1;
-      margin: 4px 0 2px;
-    }
-    .matrix-cell .m-bricks { font-size: 11px; color: var(--muted); }
-    .matrix-cell.built { border-top: 2px solid var(--green); }
-    .matrix-cell.retired { border-top: 2px solid var(--red); }
-    .matrix-cell.built-active { border-top: 2px solid var(--green); }
-    .matrix-cell.built-retired { border-top: 2px solid #a0c878; }
-    .matrix-cell.unbuild-active { border-top: 2px solid #4a9eff; }
-    .matrix-cell.unbuild-retired { border-top: 2px solid var(--muted); }
+    .overview-wrap thead th:first-child { text-align: left; }
+    .overview-wrap tbody tr { border-bottom: 1px solid var(--border); }
+    .overview-wrap tbody tr:last-child { border-bottom: none; background: #1a1a2e; }
+    .overview-wrap tbody td { padding: 12px 14px; text-align: center; vertical-align: middle; }
+    .overview-wrap tbody td:first-child { text-align: left; font-weight: 600; color: var(--text); }
+    .overview-wrap tbody tr:last-child td { color: var(--yellow); font-weight: 700; }
+    .ov-sets { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .ov-bricks { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .overview-wrap tbody tr:last-child .ov-sets { color: var(--yellow); }
+    .overview-wrap tbody tr:last-child .ov-bricks { color: var(--yellow); opacity: 0.8; }
 
     /* SEARCH */
     .search-bar {
@@ -251,7 +277,48 @@
 <div id="app">
   <!-- DASHBOARD -->
   <div class="tab-panel active" id="tab-dashboard">
-    <div class="kpi-strip" id="kpi-strip"></div>
+
+    <!-- HERO BAR -->
+    <div class="hero-bar">
+      <div class="hero-top">
+        <div class="hero-left">
+          <div class="hero-count" id="hero-total">—</div>
+          <div class="hero-label">Total Sets</div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-count" id="hero-bricks">—</div>
+          <div class="hero-label">Total Bricks</div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Build Progress</span>
+          <span class="pct" id="hero-pct">—</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="hero-bar" style="width:0%"></div>
+        </div>
+        <div class="progress-sub">
+          <span id="hero-built-sub">—</span>
+          <span id="hero-tobuild-sub">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Collection Overview</div>
+    <div class="overview-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Not Retired</th>
+            <th>Retired</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="overview-tbody"></tbody>
+      </table>
+    </div>
 
     <div class="section-title">Build Progress by Theme</div>
     <div class="table-wrap">
@@ -276,9 +343,6 @@
         <tbody id="theme-tbody"></tbody>
       </table>
     </div>
-
-    <div class="section-title">Collection Overview</div>
-    <div class="matrix-grid" id="matrix-grid"></div>
 
     <div class="section-title">Retirement Timeline</div>
     <div class="table-wrap">
@@ -419,21 +483,21 @@ function renderDashboard() {
   const builtSets = sets.filter(s => s.built);
   const unbuiltSets = sets.filter(s => !s.built);
   const retiredSets = sets.filter(s => s.retired);
-  const activeSets = sets.filter(s => !s.retired);
+  // Hero bar + 4 stat boxes
+  const builtBricks    = builtSets.reduce((a,s)=>a+s.pieces,0);
+  const unbuiltBricks  = unbuiltSets.reduce((a,s)=>a+s.pieces,0);
+  const activeSets     = sets.filter(s => !s.retired);
+  const activeBricks   = activeSets.reduce((a,s)=>a+s.pieces,0);
+  const retiredBricks  = retiredSets.reduce((a,s)=>a+s.pieces,0);
+  const pctBuilt       = total ? Math.round(builtSets.length/total*100) : 0;
 
-  // KPI strip
-  const kpis = [
-    { label: 'Total Sets', value: total, sub: fmtN(totalBricks) + ' bricks' },
-    { label: 'Built', value: builtSets.length, sub: fmtN(builtSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
-    { label: 'To Build', value: unbuiltSets.length, sub: fmtN(unbuiltSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
-    { label: 'Retired', value: retiredSets.length, sub: fmtN(retiredSets.reduce((a,s)=>a+s.pieces,0)) + ' bricks' },
-  ];
-  document.getElementById('kpi-strip').innerHTML = kpis.map(k => `
-    <div class="kpi-card">
-      <div class="label">${k.label}</div>
-      <div class="value">${k.value}</div>
-      <div class="sub">${k.sub}</div>
-    </div>`).join('');
+  document.getElementById('hero-total').textContent    = total;
+  document.getElementById('hero-bricks').textContent   = fmtN(totalBricks);
+  document.getElementById('hero-pct').textContent      = pctBuilt + '% built';
+  document.getElementById('hero-bar').style.width      = pctBuilt + '%';
+  document.getElementById('hero-built-sub').textContent    = builtSets.length + ' built';
+  document.getElementById('hero-tobuild-sub').textContent  = unbuiltSets.length + ' to build';
+
 
   // Theme table
   const themes = [...new Set(sets.map(s => s.theme))].sort();
@@ -464,24 +528,30 @@ function renderDashboard() {
     </tr>`;
   }).join('');
 
-  // Matrix
+  // Collection Overview Matrix
   const bk = arr => arr.reduce((a,s)=>a+s.pieces,0);
   const builtActive   = sets.filter(s => s.built && !s.retired);
   const builtRetired  = sets.filter(s => s.built && s.retired);
   const unbltActive   = sets.filter(s => !s.built && !s.retired);
   const unbltRetired  = sets.filter(s => !s.built && s.retired);
-  const matrix = [
-    { label: 'Built · Active',    sets: builtActive,  cls: 'built-active' },
-    { label: 'Built · Retired',   sets: builtRetired, cls: 'built-retired' },
-    { label: 'To Build · Active', sets: unbltActive,  cls: 'unbuild-active' },
-    { label: 'To Build · Retired',sets: unbltRetired, cls: 'unbuild-retired' },
-  ];
-  document.getElementById('matrix-grid').innerHTML = matrix.map(m => `
-    <div class="matrix-cell ${m.cls}">
-      <div class="m-label">${m.label}</div>
-      <div class="m-sets">${m.sets.length}</div>
-      <div class="m-bricks">${fmtN(bk(m.sets))} bricks</div>
-    </div>`).join('');
+
+  function ovCell(arr) {
+    return `<td><div class="ov-sets">${arr.length}</div><div class="ov-bricks">${fmtN(bk(arr))}</div></td>`;
+  }
+  document.getElementById('overview-tbody').innerHTML = `
+    <tr>
+      <td>To Build</td>
+      ${ovCell(unbltActive)}${ovCell(unbltRetired)}${ovCell(unbuiltSets)}
+    </tr>
+    <tr>
+      <td>Built</td>
+      ${ovCell(builtActive)}${ovCell(builtRetired)}${ovCell(builtSets)}
+    </tr>
+    <tr>
+      <td>Total</td>
+      ${ovCell(activeSets)}${ovCell(retiredSets)}
+      <td><div class="ov-sets">${total}</div><div class="ov-bricks">${fmtN(totalBricks)}</div></td>
+    </tr>`;
 
   // Retirement timeline
   const yearMap = {};
