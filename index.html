@@ -327,19 +327,21 @@
       <table id="theme-table">
         <thead>
           <tr>
-            <th>Theme</th>
-            <th>Built</th>
-            <th>Built 🧱</th>
-            <th>Unbuilt</th>
-            <th>Unbuilt 🧱</th>
-            <th>Total</th>
-            <th>Total 🧱</th>
-            <th>%Sets</th>
-            <th>%Bricks</th>
-            <th>Active</th>
-            <th>Active 🧱</th>
-            <th>Retired</th>
-            <th>Retired 🧱</th>
+            <th rowspan="2" style="vertical-align:bottom;border-right:1px solid var(--border)">Theme</th>
+            <th colspan="2" style="border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Total</th>
+            <th colspan="2" style="border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Built</th>
+            <th colspan="2" style="border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Unbuilt</th>
+            <th colspan="2" style="border-right:1px solid var(--border);border-bottom:1px solid var(--border)">%</th>
+            <th colspan="2" style="border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Active</th>
+            <th colspan="2" style="border-bottom:1px solid var(--border)">Retired</th>
+          </tr>
+          <tr>
+            <th>Sets</th><th style="border-right:1px solid var(--border)">🧱</th>
+            <th>Sets</th><th style="border-right:1px solid var(--border)">🧱</th>
+            <th>Sets</th><th style="border-right:1px solid var(--border)">🧱</th>
+            <th>Sets</th><th style="border-right:1px solid var(--border)">🧱</th>
+            <th>Sets</th><th style="border-right:1px solid var(--border)">🧱</th>
+            <th>Sets</th><th>🧱</th>
           </tr>
         </thead>
         <tbody id="theme-tbody"></tbody>
@@ -514,17 +516,17 @@ function renderDashboard() {
     const pctS = ts.length ? Math.round(built.length/ts.length*100) : 0;
     const pctB = bk(ts) ? Math.round(bk(built)/bk(ts)*100) : 0;
     return `<tr>
-      <td><span class="theme-cell"><span class="theme-dot" style="background:${themeColor(theme)}"></span>${theme}</span></td>
-      <td>${built.length}</td>
-      <td>${fmtN(bk(built))}</td>
-      <td>${unblt.length}</td>
-      <td>${fmtN(bk(unblt))}</td>
+      <td style="border-right:1px solid var(--border)"><span class="theme-cell"><span class="theme-dot" style="background:${themeColor(theme)}"></span>${theme}</span></td>
       <td>${ts.length}</td>
-      <td>${fmtN(bk(ts))}</td>
+      <td style="border-right:1px solid var(--border)">${fmtN(bk(ts))}</td>
+      <td>${built.length}</td>
+      <td style="border-right:1px solid var(--border)">${fmtN(bk(built))}</td>
+      <td>${unblt.length}</td>
+      <td style="border-right:1px solid var(--border)">${fmtN(bk(unblt))}</td>
       <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctS}%"></div></div>${pctS}%</div></td>
-      <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctB}%"></div></div>${pctB}%</div></td>
+      <td style="border-right:1px solid var(--border)"><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pctB}%"></div></div>${pctB}%</div></td>
       <td>${act.length}</td>
-      <td>${fmtN(bk(act))}</td>
+      <td style="border-right:1px solid var(--border)">${fmtN(bk(act))}</td>
       <td>${ret.length}</td>
       <td>${fmtN(bk(ret))}</td>
     </tr>`;
