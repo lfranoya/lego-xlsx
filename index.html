@@ -449,16 +449,7 @@ async function loadData() {
         typeof rawDate === 'number' ? excelDateToString(rawDate) : (rawDate || '—');
     }
 
-    // Version from service worker cache name
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage('getVersion');
-    } else {
-      // Fallback: read from sw.js directly
-      fetch('/lego-xlsx/sw.js').then(r => r.text()).then(txt => {
-        const match = txt.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
-        if (match) document.getElementById('header-version').textContent = match[1];
-      });
-    }
+    // version displayed by version.txt check on load
 
     // Inventory tab
     const ws = wb.Sheets['Inventory'];
@@ -649,6 +640,24 @@ function switchTab(tab) {
 loadData();
 </script>
 <script>
+// Version check — forces reload when version.txt changes
+(async function() {
+  try {
+    const resp = await fetch('/lego-xlsx/version.txt?t=' + Date.now());
+    const newVer = (await resp.text()).trim();
+    const oldVer = localStorage.getItem('lego-version');
+    if (oldVer && oldVer !== newVer) {
+      localStorage.setItem('lego-version', newVer);
+      window.location.reload(true);
+      return;
+    }
+    localStorage.setItem('lego-version', newVer);
+    document.getElementById('header-version').textContent = 'v' + newVer;
+  } catch(e) {
+    // offline — no problem, just use cached version
+  }
+})();
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/lego-xlsx/sw.js')
     .then(reg => {
