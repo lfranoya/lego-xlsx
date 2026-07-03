@@ -188,6 +188,27 @@
     .overview-wrap tbody tr:last-child .ov-sets { color: var(--green); }
     .overview-wrap tbody tr:last-child .ov-bricks { color: var(--green); opacity: 0.8; }
 
+    /* WISHLIST */
+    .wishlist-month { margin-bottom: 20px; }
+    .wishlist-month-header {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px; letter-spacing: 1.5px; color: var(--yellow);
+      margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .wishlist-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+      border-left: 3px solid var(--yellow);
+    }
+    .wishlist-card-left { flex: 1; min-width: 0; }
+    .wishlist-card .wl-num { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .wishlist-card .wl-name { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+    .wishlist-card .wl-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .wishlist-empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 14px; }
+    .wishlist-summary { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
     /* SEARCH */
     .search-bar {
       display: flex; gap: 8px; margin-bottom: 10px;
@@ -266,6 +287,7 @@
 <nav>
   <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
   <button onclick="switchTab('search')">Search</button>
+  <button onclick="switchTab('wishlist')">Wishlist</button>
 </nav>
 
 <div id="loading">
@@ -363,6 +385,12 @@
         <tbody id="retire-tbody"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- WISHLIST -->
+  <div class="tab-panel" id="tab-wishlist">
+    <div class="wishlist-summary" id="wishlist-summary"></div>
+    <div id="wishlist-content"></div>
   </div>
 
   <!-- SEARCH -->
@@ -471,9 +499,28 @@ async function loadData() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'block';
 
+    // Parse Wishlist tab — fully dynamic, works with any number of rows
+    let wishlistSets = [];
+    if (wb.Sheets['Wishlist']) {
+      const wws = wb.Sheets['Wishlist'];
+      const wrows = XLSX.utils.sheet_to_json(wws, { header: 1 });
+      wishlistSets = wrows.slice(1)
+        .filter(r => r[0] && r[1])
+        .map(r => ({
+          num:         String(r[0]).trim(),
+          name:        String(r[1]).trim(),
+          theme:       String(r[2] || 'Other').trim(),
+          releaseDate: typeof r[3] === 'number'
+                         ? new Date(Math.round((r[3] - 25568) * 86400 * 1000))
+                         : null,
+          gotIt:       String(r[4] || '').trim().toUpperCase()
+        }));
+    }
+
     renderDashboard();
     populateThemeFilter();
     renderSearch();
+    renderWishlist(wishlistSets);
 
   } catch(e) {
     console.error(e);
@@ -594,6 +641,51 @@ function populateThemeFilter() {
   });
 }
 
+function renderWishlist(wishlistSets) {
+  const pending = wishlistSets.filter(s => s.gotIt !== 'YES');
+
+  const summary = document.getElementById('wishlist-summary');
+  summary.textContent = pending.length + ' set' + (pending.length !== 1 ? 's' : '') + ' on wishlist';
+
+  if (pending.length === 0) {
+    document.getElementById('wishlist-content').innerHTML =
+      '<div class="wishlist-empty">🎉 Nothing on the wishlist!</div>';
+    return;
+  }
+
+  // Group by month/year using release date
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+
+  const groups = {};
+  pending.forEach(s => {
+    const key = s.releaseDate ? s.releaseDate.getFullYear() + '-' + String(s.releaseDate.getMonth()+1).padStart(2,'0') : 'unknown';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  });
+
+  const html = Object.keys(groups).sort().map(key => {
+    const label = key === 'unknown' ? 'Date Unknown'
+      : MONTHS[parseInt(key.split('-')[1])-1] + ' ' + key.split('-')[0];
+    const cards = groups[key].map(s => `
+      <div class="wishlist-card">
+        <div class="wishlist-card-left">
+          <div class="wl-num">#${s.num}</div>
+          <div class="wl-name">${s.name}</div>
+          <div class="wl-meta">
+            <span class="badge badge-theme" style="border-left:2px solid ${themeColor(s.theme)}">${s.theme}</span>
+          </div>
+        </div>
+      </div>`).join('');
+    return `<div class="wishlist-month">
+      <div class="wishlist-month-header">${label}</div>
+      ${cards}
+    </div>`;
+  }).join('');
+
+  document.getElementById('wishlist-content').innerHTML = html;
+}
+
 function renderSearch() {
   const q = document.getElementById('search-input').value.toLowerCase().trim();
   const theme = document.getElementById('filter-theme').value;
@@ -634,7 +726,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+  event.currentTarget.classList.add('active');
 }
 
 loadData();
