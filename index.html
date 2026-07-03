@@ -203,7 +203,6 @@
       border-left: 3px solid var(--yellow);
     }
     .wishlist-card-left { flex: 1; min-width: 0; }
-    .wishlist-card .wl-num { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
     .wishlist-card .wl-name { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
     .wishlist-card .wl-meta { display: flex; gap: 6px; flex-wrap: wrap; }
     .wishlist-empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 14px; }
@@ -670,11 +669,14 @@ function renderWishlist(wishlistSets) {
     const cards = groups[key].map(s => `
       <div class="wishlist-card">
         <div class="wishlist-card-left">
-          <div class="wl-num">#${s.num}</div>
           <div class="wl-name">${s.name}</div>
           <div class="wl-meta">
             <span class="badge badge-theme" style="border-left:2px solid ${themeColor(s.theme)}">${s.theme}</span>
           </div>
+        </div>
+        <div class="set-card-right">
+          <div class="set-pieces-num">${s.num}</div>
+          <div class="set-pieces-label">set #</div>
         </div>
       </div>`).join('');
     return `<div class="wishlist-month">
