@@ -389,6 +389,11 @@
   <!-- WISHLIST -->
   <div class="tab-panel" id="tab-wishlist">
     <div class="wishlist-summary" id="wishlist-summary"></div>
+    <div class="filter-row" style="margin-bottom:12px">
+      <select id="filter-wl-month" onchange="filterWishlist()">
+        <option value="">All Months</option>
+      </select>
+    </div>
     <div id="wishlist-content"></div>
   </div>
 
@@ -640,29 +645,32 @@ function populateThemeFilter() {
   });
 }
 
-function renderWishlist(wishlistSets) {
-  const pending = wishlistSets.filter(s => s.gotIt !== 'YES');
+let _wishlistSets = [];
 
-  const summary = document.getElementById('wishlist-summary');
-  summary.textContent = pending.length + ' set' + (pending.length !== 1 ? 's' : '') + ' on wishlist';
+function filterWishlist() {
+  const sel = document.getElementById('filter-wl-month').value;
+  const filtered = sel ? _wishlistSets.filter(s => {
+    if (!s.releaseDate) return sel === 'unknown';
+    const key = s.releaseDate.getFullYear() + '-' + String(s.releaseDate.getMonth()+1).padStart(2,'0');
+    return key === sel;
+  }) : _wishlistSets;
+  renderWishlistCards(filtered);
+}
 
-  if (pending.length === 0) {
-    document.getElementById('wishlist-content').innerHTML =
-      '<div class="wishlist-empty">🎉 Nothing on the wishlist!</div>';
-    return;
-  }
-
-  // Group by month/year using release date
+function renderWishlistCards(pending) {
   const MONTHS = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
-
+  if (pending.length === 0) {
+    document.getElementById('wishlist-content').innerHTML =
+      '<div class="wishlist-empty">No sets for this month.</div>';
+    return;
+  }
   const groups = {};
   pending.forEach(s => {
     const key = s.releaseDate ? s.releaseDate.getFullYear() + '-' + String(s.releaseDate.getMonth()+1).padStart(2,'0') : 'unknown';
     if (!groups[key]) groups[key] = [];
     groups[key].push(s);
   });
-
   const html = Object.keys(groups).sort().map(key => {
     const label = key === 'unknown' ? 'Date Unknown'
       : MONTHS[parseInt(key.split('-')[1])-1] + ' ' + key.split('-')[0];
@@ -684,8 +692,39 @@ function renderWishlist(wishlistSets) {
       ${cards}
     </div>`;
   }).join('');
-
   document.getElementById('wishlist-content').innerHTML = html;
+}
+
+function renderWishlist(wishlistSets) {
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+
+  _wishlistSets = wishlistSets.filter(s => s.gotIt !== 'YES');
+
+  const summary = document.getElementById('wishlist-summary');
+  summary.textContent = _wishlistSets.length + ' set' + (_wishlistSets.length !== 1 ? 's' : '') + ' on wishlist';
+
+  if (_wishlistSets.length === 0) {
+    document.getElementById('wishlist-content').innerHTML =
+      '<div class="wishlist-empty">🎉 Nothing on the wishlist!</div>';
+    return;
+  }
+
+  // Populate month filter dynamically
+  const monthKeys = [...new Set(_wishlistSets.map(s =>
+    s.releaseDate ? s.releaseDate.getFullYear() + '-' + String(s.releaseDate.getMonth()+1).padStart(2,'0') : 'unknown'
+  ))].sort();
+  const sel = document.getElementById('filter-wl-month');
+  sel.innerHTML = '<option value="">All Months</option>';
+  monthKeys.forEach(key => {
+    const label = key === 'unknown' ? 'Date Unknown'
+      : MONTHS[parseInt(key.split('-')[1])-1] + ' ' + key.split('-')[0];
+    const o = document.createElement('option');
+    o.value = key; o.textContent = label;
+    sel.appendChild(o);
+  });
+
+  renderWishlistCards(_wishlistSets);
 }
 
 function renderSearch() {
