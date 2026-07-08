@@ -328,6 +328,19 @@
           <span id="hero-tobuild-sub">—</span>
         </div>
       </div>
+      <div class="progress-wrap" style="margin-top:10px">
+        <div class="progress-label">
+          <span>Brick Progress</span>
+          <span class="pct" id="hero-brick-pct">—</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="hero-brick-bar" style="width:0%"></div>
+        </div>
+        <div class="progress-sub">
+          <span id="hero-brick-built-sub">—</span>
+          <span id="hero-brick-unblt-sub">—</span>
+        </div>
+      </div>
     </div>
 
     <div class="section-title">Collection Overview</div>
@@ -553,6 +566,13 @@ function renderDashboard() {
   document.getElementById('hero-pct').textContent      = pctBuilt + '% built';
   document.getElementById('hero-bar').style.width      = pctBuilt + '%';
   document.getElementById('hero-bar').style.background  = pctColor(pctBuilt);
+
+  const pctBricks = totalBricks ? Math.round(builtBricks/totalBricks*100) : 0;
+  document.getElementById('hero-brick-pct').textContent      = pctBricks + '% built';
+  document.getElementById('hero-brick-bar').style.width      = pctBricks + '%';
+  document.getElementById('hero-brick-bar').style.background = pctColor(pctBricks);
+  document.getElementById('hero-brick-built-sub').textContent  = fmtN(builtBricks) + ' built';
+  document.getElementById('hero-brick-unblt-sub').textContent  = fmtN(unbuiltBricks) + ' to build';
   document.getElementById('hero-built-sub').textContent    = builtSets.length + ' built';
   document.getElementById('hero-tobuild-sub').textContent  = unbuiltSets.length + ' unbuilt';
 
